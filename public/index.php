@@ -24,7 +24,7 @@ $app->get('/users/new', function ($request, $response) {
     $id = rand();
     $params = ['user' => ['name' => '', 'email' => '', 'id' => $id], 'errors' => []];
     return $this->get('renderer')->render($response, 'users/new.phtml', $params);
-});
+})->setName('users-new');
 
 $app->get('/courses/{id}', function ($request, $response, array $args) {
     $id = $args['id'];
@@ -53,7 +53,7 @@ $app->get('/users', function ($request, $response) {
     );
     $params = ['users' => $result, 'term' => $term];
     return $this->get('renderer')->render($response, 'users/users.phtml', $params);
-});
+})->setName('get-users');
 
 $app->post('/users', function ($request, $response) {
     $validator = new Validator();
@@ -71,6 +71,8 @@ $app->post('/users', function ($request, $response) {
     }
     $params = ['user' => $user, 'errors' => $errors];
     return $this->get('renderer')->render($response, 'users/new.phtml', $params);
-});
+})->setName('post-users');
+
+$router = $app->getRouteCollector()->getRouteParser();
 
 $app->run();
