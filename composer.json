@@ -1,4 +1,12 @@
 {
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        },
+        "files": []
+    },
+    "name": "hexlet/slim",
+    "license": "MIT",
     "require": {
         "slim/slim": "^4.10",
         "slim/psr7": "^1.5",

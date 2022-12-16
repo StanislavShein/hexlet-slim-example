@@ -4,10 +4,9 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use Slim\Factory\AppFactory;
 use DI\Container;
+use App\Validator;
 
 use function Symfony\Component\String\s;
-
-$users = ['mike', 'mishel', 'adel', 'keks', 'kamila'];
 
 $container = new Container();
 $container->set('renderer', function () {
@@ -19,6 +18,12 @@ $app->addErrorMiddleware(true, true, true);
 $app->get('/', function ($request, $response) {
     $response->getBody()->write('Welcome to Slim!');
     return $response;
+});
+
+$app->get('/users/new', function ($request, $response) {
+    $id = rand();
+    $params = ['user' => ['name' => '', 'email' => '', 'id' => $id], 'errors' => []];
+    return $this->get('renderer')->render($response, 'users/new.phtml', $params);
 });
 
 $app->get('/courses/{id}', function ($request, $response, array $args) {
@@ -33,18 +38,39 @@ $app->get('/courses/{courseId}/lessons/{id}', function ($request, $response, arr
         ->write("<br/>  Lesson id: {$id}");
 });
 
-$app->get('/users', function ($request, $response, $args) use ($users) {
-    $term = $request->getQueryParam('term');
-    $result = collect($users)->filter(
-        fn ($user) => str_contains($user, $term) ? $user : false
-    );
-    $params = ['users' => $result, 'term' => $term];
-    return $this->get('renderer')->render($response, 'users/index.phtml', $params);
-});
-
 $app->get('/users/{id}', function ($request, $response, $args) {
     $params = ['id' => $args['id'], 'nickname' => 'user-' . $args['id']];
     return $this->get('renderer')->render($response, 'users/show.phtml', $params);
+});
+
+$app->get('/users', function ($request, $response) {
+    $file = file_get_contents('src/Users.php');
+    $users = json_decode($file, true);
+
+    $term = $request->getQueryParam('term');
+    $result = collect($users)->filter(
+        fn ($user) => str_contains($user['name'], $term) ? $user['name'] : false
+    );
+    $params = ['users' => $result, 'term' => $term];
+    return $this->get('renderer')->render($response, 'users/users.phtml', $params);
+});
+
+$app->post('/users', function ($request, $response) {
+    $validator = new Validator();
+    $user = $request->getParsedBodyParam('user');
+    $errors = $validator->validate($user);
+
+    if (count($errors) === 0) {
+        $path = 'src/Users.php';
+        $file = file_get_contents($path);
+        $fileArray = json_decode($file, true);
+        $data = ['name' => $user['name'], 'email' => $user['email'], 'id' => $user['id']];
+        $fileArray[] = $data;
+        file_put_contents($path, json_encode($fileArray));
+        return $response->withRedirect('/users');
+    }
+    $params = ['user' => $user, 'errors' => $errors];
+    return $this->get('renderer')->render($response, 'users/new.phtml', $params);
 });
 
 $app->run();
