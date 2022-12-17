@@ -14,6 +14,7 @@
         "slim/php-view": "^3.2",
         "php-di/php-di": "^6.4",
         "tightenco/collect": "^9.33",
-        "symfony/string": "^6.2"
+        "symfony/string": "^6.2",
+        "slim/flash": "^0.4.0"
     }
 }
